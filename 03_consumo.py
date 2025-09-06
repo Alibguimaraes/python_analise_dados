@@ -147,6 +147,157 @@ def grafico3():
         )
     return figuraGrafico3.to_html()
 
+
+@app.route('/comparar',methods =['POST','GET'])
+def comparar():
+   opcoes =[
+       'beer_servings',
+       'spirit_servings',
+       'wine_servings' ]
+
+   if request.method == "POST":
+        eixoX = request.form.get('eixo_x')
+        eixoY = request.form.get('eixo_y')
+        if eixoX == eixoY:
+         return "<marquee> Você fez besteira ... escolha tabelas diferentes.... </marquee>"
+        conn = sqlite3.connect(f'{caminho}banco01.bd') 
+        df = pd.read_sql_query("SELECT country, {}, {} FROM Bebidas".format(eixoX, eixoY), conn)
+        conn.close()
+        figuraComparar = px.scatter(
+            df,
+            x = eixoX,
+            y = eixoY,
+            title= f"Comparação entre {eixoX} VS {eixoY}"            
+        )
+
+        figuraComparar.update_traces(
+            textposition = "top center"
+        )
+
+        return figuraComparar.to_html()
+
+   
+
+   return render_template_string('''
+    <!--Isso é um comentario em html --> 
+       <style>
+     /* Estilo global com logo de fundo */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(to right, #f2f6f9, #dbe9f4);
+    background-image: url('https://cdn-icons-png.flaticon.com/512/1046/1046784.png'); /* Logo de bebida (pode trocar) */
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 200px;
+    background-attachment: fixed;
+    opacity: 1;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+}
+
+/* Fundo branco do formulário */
+form {
+    background-color: white;
+    padding: 30px 40px;
+    margin-top: 60px;
+    border-radius: 12px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    width: 90%;
+    z-index: 1;
+}
+
+/* Título */
+h2 {
+    text-align: center;
+    color: #333;
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+/* Labels */
+label {
+    display: block;
+    margin: 15px 0 5px;
+    font-weight: 600;
+    color: #444;
+}
+
+/* Selects */
+select {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background-color: #f9f9f9;
+    transition: border-color 0.3s;
+}
+
+select:focus {
+    border-color: #28a745;
+    outline: none;
+    background-color: #fff;
+}
+
+/* Espaçamento entre quebras de linha */
+br + br {
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* Botão verde */
+input[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    background-color: #28a745; /* Verde */
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: background-color 0.3s;
+}
+
+input[type="submit"]:hover {
+    background-color: #218838;
+}
+
+    background-image: url('https://cdn-icons-png.flaticon.com/512/1046/1046784.png');
+
+
+       </style>                                                     
+    <h2> Comparar Campos</h2>  
+    <form method="POST">
+        <label for="eixo_x"> Eixo X:</label>
+        <select name="eixo_x">
+          {% for opcao in opcoes %}                   
+          <option value="{{opcao}}">{{opcao}}</option>
+          {% endfor %}
+        </select>
+        <br></br>
+
+        <label for="eixo_y"> Eixo Y: </label>
+        <select name="eixo_y">
+         {% for opcao in opcoes%}
+         <option value="{{opcao}}">{{opcao}}</option>
+         {% endfor %}
+        </select>
+        <br></br>
+
+        <input type="submit" "value="--Comparar--">
+    </form>    
+''', opcoes = opcoes)
+
+
+
+
+
 if __name__ == '__main__':
   criarBancoDados()
   app.run(debug=True)
