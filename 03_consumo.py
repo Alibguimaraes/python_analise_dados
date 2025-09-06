@@ -295,8 +295,56 @@ input[type="submit"]:hover {
 ''', opcoes = opcoes)
 
 
+@app.route('/ver', methods=['GET', 'POST'])
+def ver_tabela():
+    if request.method =="POST":
+       nome_tabela =request.form.get('tabela')
+       if nome_tabela not in ['Bebidas','vingadores']:
+        return "Tabela errada rapaz...pensa que vai onde?"
+       conn = sqlite3.connect(f'{caminho}banco01.bd' )
+       df = pd.read_sql_query(f"SELECT * FROM, {nome_tabela} ",conn)
+       conn.close()
+       tabela_html =df.to.html(classes='table-striped')
+       return f'''
+       <h3> Conteudo da tabela{nome_tabela}:</h3>
+       {tabela_html}
+      '''
+    return render_template_string("""
+    <h3> Visualizar tabelas!</h3>
+    <form>
+      <label for ="tabela">Selecione uma tabela:</label>
+      <select name ="tabela">
+      <option value ="Bebidas"> BEBIDAS </option>
+      <option value ="vingadores"> Vingadores</option>
+      </select>
+      <input type ="submit" value=" Consultar">
+     </form>
 
+ """)
 
+@app.route('/upload',methods =['GET','POST'])
+def upload():
+    if request.method == "POST":
+        recebido = request.files ['c_arquivo']
+        if not recebido:
+          return "Nenhum arquivo foi recebido"
+        dfAvengers =pd.read_csv(recebido, encoding='latin1')
+        conn = sqlite3.connect(f'{caminho}banco01.bd' )
+        dfAvengers.to_sql("vingadores",conn, if_exists="replace", index=False)
+        conn.commit()
+        conn.close()
+        return " Sucesso! Tabela vingadores armazenada no banco de dados"
+    
+    return ''' 
+
+   <h2> Upload da tabela Avengers</h2>
+   <form methods ="POST" enctype ='multipart/form_data'>
+    <input type ='file' name='c_arquivo' accept ='.csv'>
+    <input type = 'submit' value ='Carregar'>
+     
+       </form>
+    '''
+   
 
 if __name__ == '__main__':
   criarBancoDados()
